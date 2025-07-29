@@ -25,6 +25,6 @@ public interface UserRepository extends PagingAndSortingRepository<UserEntity, I
 
     // Truy vấn khai báo rõ ràng (cho USE_DECLARED_QUERY hoặc fallback của CREATE_IF_NOT_FOUND)
     @Query
-            ("SELECT u FROM UserEntity u WHERE u.name = :name")
+            ("SELECT u FROM #{#entityName} u WHERE u.name = :name")
     UserEntity findDeclaredByName(@Param("name") String name);
 }

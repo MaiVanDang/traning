@@ -67,4 +67,6 @@
 <!--                      query-lookup-strategy="create"/> &lt;!&ndash;giúp cho sinh tự động mà không cần @Query&ndash;&gt;-->
 <!--                      query-lookup-strategy="use-declared-query"/>--> <!--phải có @Query thì mới chạy-->
 
+
+
 </beans>
