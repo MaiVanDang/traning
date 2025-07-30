@@ -1,167 +1,210 @@
-# Chương 1 – RESTful Web Services Demo
+# Chương 3 – Annotation trong Spring Boot
 
 ## 🎯 Mục tiêu
 
-Xây dựng một ứng dụng Spring Boot đơn giản để thực hiện CRUD đối với thực thể `Product` thông qua các API RESTful.
+Hiểu và thực hành các annotation cốt lõi dùng trong việc xử lý request và ánh xạ dữ liệu trong Spring/Spring Boot:
+
+- `@RestController`, `@RequestMapping`
+- `@GetMapping`, `@PostMapping`
+- `@PathVariable`, `@RequestParam`, `@RequestBody`
+- `@ModelAttribute`
 
 ---
 
-## 🛠 Công nghệ sử dụng
-
-- Java 17 trở lên
-- Spring Boot 3.x
-- Spring Web
-- Spring Data JPA
-- MySQL hoặc H2 (cho môi trường demo)
-- Lombok
-- Postman (gửi request REST)
-
----
-
-## 🧱 Kiến trúc project
+## 🧱 Cấu trúc thư mục
 
 ```
-com.practice
+com.practice.chapter3
 ├── DemoApplication.java
 ├── controller/
-│   └── ProductController.java
-├── entity/
-│   ├── ProductEntity.java
-│   └── CategoryEntity.java
-├── repository/
-│   └── ProductRepository.java
-├── service/
-│   └── ProductService.java
-└── resources/
-    └── application.properties
+│   └── AnnotationDemoController.java
+└── model/
+    └── UserForm.java
 ```
 
 ---
 
-## 🧪 Các API đã triển khai
+## 📌 Các API Demo
 
-| Method | Endpoint                    | Mô tả                      |
-|--------|-----------------------------|----------------------------|
-| GET    | `/api/products`             | Lấy danh sách sản phẩm     |
-| GET    | `/api/products/{id}`        | Lấy sản phẩm theo ID       |
-| POST   | `/api/products`             | Tạo mới sản phẩm           |
-| PUT    | `/api/products/{id}`        | Cập nhật sản phẩm          |
-| DELETE | `/api/products/{id}`        | Xoá sản phẩm               |
+| Endpoint          | Method | Annotation      | Mô tả                                  |
+|-------------------|--------|-----------------|----------------------------------------|
+| `/api/greet`      | GET    | `@RequestParam` | Nhận tham số từ URL: `?name=...`       |
+| `/api/hello/{name}` | GET    | `@PathVariable` | Trích xuất biến từ URI                 |
+| `/api/json`       | POST   | `@RequestBody`  | Nhận JSON trong phần thân request      |
+| `/api/form`       | POST   | `@ModelAttribute` | Nhận dữ liệu từ form-urlencoded      |
 
 ---
 
-## 📥 Cấu hình `application.properties`
+## 📥 Test bằng Postman
 
-### ✅ Dùng MySQL
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/demo_rest?useSSL=false&serverTimezone=UTC
-spring.datasource.username=root
-spring.datasource.password=yourpassword
-spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+### 🔹 1. GET `/api/greet?name=Đăng`
 
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
-spring.jpa.properties.hibernate.id.new_generator_mappings=false
-
-spring.jpa.show-sql=true
+**Request:**
+```
+GET http://localhost:8080/api/greet?name=Đăng
 ```
 
-### ✅ Dùng H2 (cho môi trường demo)
-```properties
-spring.datasource.url=jdbc:h2:mem:testdb
-spring.datasource.driverClassName=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=password
-
-spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
-spring.jpa.hibernate.ddl-auto=create-drop
-spring.h2.console.enabled=true
+**Kết quả:**
+```
+Xin chào Đăng!
 ```
 
 ---
 
-## 🚀 Hướng dẫn chạy project
+### 🔹 2. GET `/api/hello/Đăng`
 
-### 1. Clone hoặc tải project về máy
-
-### 2. Cài đặt Maven dependency:
-```bash
-mvn clean install
+**Request:**
+```
+GET http://localhost:8080/api/hello/Đăng
 ```
 
-### 3. Chạy project:
-```bash
-mvn spring-boot:run
+**Kết quả:**
 ```
-
-### 4. Truy cập Postman để kiểm thử các API:
-- **Base URL**: `http://localhost:8080/api/products`
+Hello Đăng from @PathVariable!
+```
 
 ---
 
-## 🧪 Gửi request POST tạo sản phẩm (ví dụ trong Postman)
+### 🔹 3. POST `/api/json`
 
+**Request:**
+```
+POST http://localhost:8080/api/json
+Content-Type: application/json
+```
+
+**Body (raw JSON):**
 ```json
 {
-  "name": "T-Shirt Nam",
-  "importPrice": 100.0,
-  "sellingPrice": 150.0,
-  "stockQuantity": 20,
-  "imageUrl": "https://example.com/tshirt.jpg",
-  "isFeatured": true,
-  "description": "Áo thun cotton 100%",
-  "category": {
-    "id": 1
-  }
+  "username": "vanmai",
+  "email": "vanmai@example.com"
 }
 ```
 
-> ⚠️ **Lưu ý**: Đảm bảo category ID đã tồn tại trong DB!
+**Kết quả:**
+```
+Received JSON: vanmai - vanmai@example.com
+```
 
 ---
 
-## 📚 Kiến thức áp dụng
+### 🔹 4. POST `/api/form`
 
-- **Kiến trúc REST**: Thiết kế API theo chuẩn RESTful
-- **HTTP methods**: GET, POST, PUT, DELETE
-- **Spring Annotations**:
-    - `@RestController`, `@RequestMapping`
-    - `@PathVariable`, `@RequestBody`
-    - `@Autowired`
-- **Truy xuất dữ liệu**: Spring Data JPA
-- **Entity Mapping**: JPA annotations
+**Request:**
+```
+POST http://localhost:8080/api/form
+Content-Type: application/x-www-form-urlencoded
+```
+
+**Body (form-data hoặc x-www-form-urlencoded):**
+```
+username=vanmai&email=vanmai@example.com
+```
+
+**Kết quả:**
+```
+Form submit: vanmai - vanmai@example.com
+```
 
 ---
 
-## 🔧 Testing với Postman
+## 💡 Chi tiết các Annotation
 
-### GET - Lấy danh sách sản phẩm
-```
-GET http://localhost:8080/api/products
+### `@RestController`
+- Kết hợp `@Controller` + `@ResponseBody`
+- Tự động serialize response thành JSON/XML
+
+### `@RequestMapping`
+- Annotation tổng quát để map request
+- Có thể chỉ định method, path, headers, params
+
+### `@GetMapping` / `@PostMapping`
+- Shortcut cho `@RequestMapping(method = GET/POST)`
+- Code ngắn gọn và rõ ràng hơn
+
+### `@PathVariable`
+- Trích xuất giá trị từ URI path
+- Ví dụ: `/users/{id}` → `@PathVariable Long id`
+
+### `@RequestParam`
+- Lấy parameter từ query string
+- Ví dụ: `/search?name=abc` → `@RequestParam String name`
+
+### `@RequestBody`
+- Deserialize JSON/XML từ request body thành object
+- Thường dùng với POST/PUT requests
+
+### `@ModelAttribute`
+- Bind form data thành object
+- Hỗ trợ form-urlencoded và multipart
+
+---
+
+## 🛠 Code Example
+
+### Controller
+```java
+@RestController
+@RequestMapping("/api")
+public class AnnotationDemoController {
+    
+    @GetMapping("/greet")
+    public String greet(@RequestParam String name) {
+        return "Xin chào " + name + "!";
+    }
+    
+    @GetMapping("/hello/{name}")
+    public String hello(@PathVariable String name) {
+        return "Hello " + name + " from @PathVariable!";
+    }
+    
+    @PostMapping("/json")
+    public String receiveJson(@RequestBody UserForm user) {
+        return "Received JSON: " + user.getUsername() + " - " + user.getEmail();
+    }
+    
+    @PostMapping("/form")
+    public String receiveForm(@ModelAttribute UserForm user) {
+        return "Form submit: " + user.getUsername() + " - " + user.getEmail();
+    }
+}
 ```
 
-### GET - Lấy sản phẩm theo ID
-```
-GET http://localhost:8080/api/products/1
-```
-
-### POST - Tạo sản phẩm mới
-```
-POST http://localhost:8080/api/products
-Content-Type: application/json
-
-{JSON payload như ví dụ trên}
+### Model
+```java
+public class UserForm {
+    private String username;
+    private String email;
+    
+    // Constructors, getters, setters
+}
 ```
 
-### PUT - Cập nhật sản phẩm
-```
-PUT http://localhost:8080/api/products/1
-Content-Type: application/json
+---
 
-{JSON payload đã cập nhật}
-```
+## 📚 Kiến thức đạt được
 
-### DELETE - Xóa sản phẩm
-```
-DELETE http://localhost:8080/api/products/1
-```
+- **Annotation** giúp mã ngắn gọn, dễ bảo trì
+- Tận dụng sức mạnh của **Convention over Configuration**
+- Loại bỏ hầu hết cấu hình XML truyền thống
+- Hiểu cách Spring Boot xử lý các loại request khác nhau
+- Phân biệt giữa `@RequestParam`, `@PathVariable`, `@RequestBody`, `@ModelAttribute`
+
+---
+
+## 🔧 Tips
+
+1. **@RequestParam** vs **@PathVariable**:
+  - `@RequestParam`: Query parameters (`?name=value`)
+  - `@PathVariable`: URI path variables (`/users/{id}`)
+
+2. **@RequestBody** vs **@ModelAttribute**:
+  - `@RequestBody`: JSON/XML data
+  - `@ModelAttribute`: Form data
+
+3. **Validation**: Có thể kết hợp với `@Valid` để validate input
+
+4. **Optional Parameters**:
+   ```java
+   @RequestParam(required = false, defaultValue = "Guest") String name;
+   ```
