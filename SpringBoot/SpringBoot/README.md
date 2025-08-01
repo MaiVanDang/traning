@@ -1,210 +1,140 @@
-# Chương 3 – Annotation trong Spring Boot
+# Chương 5 
 
-## 🎯 Mục tiêu
+# 📌 Spring Boot – Global Exception Handling Demo
 
-Hiểu và thực hành các annotation cốt lõi dùng trong việc xử lý request và ánh xạ dữ liệu trong Spring/Spring Boot:
+## 🚀 Mục tiêu
 
-- `@RestController`, `@RequestMapping`
-- `@GetMapping`, `@PostMapping`
-- `@PathVariable`, `@RequestParam`, `@RequestBody`
-- `@ModelAttribute`
+Xây dựng một dự án Spring Boot REST API đơn giản để **xử lý ngoại lệ toàn cục (global exception)** bằng cách sử dụng các annotation như `@RestControllerAdvice`, `@ExceptionHandler`, và trả về JSON phản hồi lỗi tùy chỉnh.
 
 ---
 
-## 🧱 Cấu trúc thư mục
+## 🛠️ Kỹ thuật sử dụng
 
-```
-com.practice.chapter3
-├── DemoApplication.java
+- Java 17+
+- Spring Boot 3.x
+- Spring Web
+- Spring Data JPA
+- H2 Database (in-memory)
+- Lombok
+- Exception Handling (custom exception, global handler)
+- Validation (JSR 380)
+
+---
+
+## 📁 Cấu trúc thư mục
+
+```bash
+src/main/java/com/practice
+│
 ├── controller/
-│   └── AnnotationDemoController.java
-└── model/
-    └── UserForm.java
-```
-
----
-
-## 📌 Các API Demo
-
-| Endpoint          | Method | Annotation      | Mô tả                                  |
-|-------------------|--------|-----------------|----------------------------------------|
-| `/api/greet`      | GET    | `@RequestParam` | Nhận tham số từ URL: `?name=...`       |
-| `/api/hello/{name}` | GET    | `@PathVariable` | Trích xuất biến từ URI                 |
-| `/api/json`       | POST   | `@RequestBody`  | Nhận JSON trong phần thân request      |
-| `/api/form`       | POST   | `@ModelAttribute` | Nhận dữ liệu từ form-urlencoded      |
-
----
-
-## 📥 Test bằng Postman
-
-### 🔹 1. GET `/api/greet?name=Đăng`
-
-**Request:**
-```
-GET http://localhost:8080/api/greet?name=Đăng
-```
-
-**Kết quả:**
-```
-Xin chào Đăng!
-```
-
----
-
-### 🔹 2. GET `/api/hello/Đăng`
-
-**Request:**
-```
-GET http://localhost:8080/api/hello/Đăng
-```
-
-**Kết quả:**
-```
-Hello Đăng from @PathVariable!
-```
-
----
-
-### 🔹 3. POST `/api/json`
-
-**Request:**
-```
-POST http://localhost:8080/api/json
+│   └── UserController.java
+│
+├── entity/
+│   └── User.java
+│
+├── repository/
+│   └── UserRepository.java
+│
+├── service/
+│   └── UserService.java
+│
+├── exception/
+│   ├── UserNotFoundException.java
+│   ├── ErrorResponse.java
+│   └── GlobalExceptionHandler.java
+│
+└── Application.java
+🧪 API Mẫu và Cách test với Postman
+➕ Tạo user mới
+bash
+Sao chép
+Chỉnh sửa
+POST /api/users
 Content-Type: application/json
-```
-
-**Body (raw JSON):**
-```json
+json
+Sao chép
+Chỉnh sửa
 {
-  "username": "vanmai",
-  "email": "vanmai@example.com"
+  "name": "Mai Văn Đăng"
 }
-```
+➡ Kết quả: Trả về user mới tạo.
 
-**Kết quả:**
-```
-Received JSON: vanmai - vanmai@example.com
-```
+🔍 Tìm user theo ID
+bash
+Sao chép
+Chỉnh sửa
+GET /api/users/{id}
+Ví dụ:
 
----
+bash
+Sao chép
+Chỉnh sửa
+GET /api/users/100
+➡ Nếu không tồn tại, API trả về lỗi 404:
 
-### 🔹 4. POST `/api/form`
-
-**Request:**
-```
-POST http://localhost:8080/api/form
-Content-Type: application/x-www-form-urlencoded
-```
-
-**Body (form-data hoặc x-www-form-urlencoded):**
-```
-username=vanmai&email=vanmai@example.com
-```
-
-**Kết quả:**
-```
-Form submit: vanmai - vanmai@example.com
-```
-
----
-
-## 💡 Chi tiết các Annotation
-
-### `@RestController`
-- Kết hợp `@Controller` + `@ResponseBody`
-- Tự động serialize response thành JSON/XML
-
-### `@RequestMapping`
-- Annotation tổng quát để map request
-- Có thể chỉ định method, path, headers, params
-
-### `@GetMapping` / `@PostMapping`
-- Shortcut cho `@RequestMapping(method = GET/POST)`
-- Code ngắn gọn và rõ ràng hơn
-
-### `@PathVariable`
-- Trích xuất giá trị từ URI path
-- Ví dụ: `/users/{id}` → `@PathVariable Long id`
-
-### `@RequestParam`
-- Lấy parameter từ query string
-- Ví dụ: `/search?name=abc` → `@RequestParam String name`
-
-### `@RequestBody`
-- Deserialize JSON/XML từ request body thành object
-- Thường dùng với POST/PUT requests
-
-### `@ModelAttribute`
-- Bind form data thành object
-- Hỗ trợ form-urlencoded và multipart
-
----
-
-## 🛠 Code Example
-
-### Controller
-```java
-@RestController
-@RequestMapping("/api")
-public class AnnotationDemoController {
-    
-    @GetMapping("/greet")
-    public String greet(@RequestParam String name) {
-        return "Xin chào " + name + "!";
-    }
-    
-    @GetMapping("/hello/{name}")
-    public String hello(@PathVariable String name) {
-        return "Hello " + name + " from @PathVariable!";
-    }
-    
-    @PostMapping("/json")
-    public String receiveJson(@RequestBody UserForm user) {
-        return "Received JSON: " + user.getUsername() + " - " + user.getEmail();
-    }
-    
-    @PostMapping("/form")
-    public String receiveForm(@ModelAttribute UserForm user) {
-        return "Form submit: " + user.getUsername() + " - " + user.getEmail();
-    }
+json
+Sao chép
+Chỉnh sửa
+{
+  "timestamp": "2025-08-01 14:45:10",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Không tìm thấy người dùng có ID: 100",
+  "path": "/api/users/100"
 }
-```
+❌ Gửi sai định dạng ID
+bash
+Sao chép
+Chỉnh sửa
+GET /api/users/abc
+➡ Spring sẽ ném lỗi 400 hoặc 500 tùy vào cấu hình (ví dụ: Failed to convert value of type 'String' to required type 'int')
 
-### Model
-```java
-public class UserForm {
-    private String username;
-    private String email;
-    
-    // Constructors, getters, setters
+🧯 Xử lý ngoại lệ
+UserNotFoundException: Ngoại lệ tùy chỉnh, ném khi user không tồn tại.
+
+MethodArgumentNotValidException: Dùng cho lỗi validation đầu vào.
+
+HttpMessageNotReadableException: Khi body request sai định dạng JSON.
+
+Tất cả các lỗi được xử lý ở lớp:
+
+java
+Sao chép
+Chỉnh sửa
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+    @ExceptionHandler(UserNotFoundException.class)
+    ...
 }
-```
+💡 Ghi chú thêm
+Dự án sử dụng @RestControllerAdvice để tự động trả về JSON mà không cần thêm @ResponseBody.
 
----
+@JsonFormat và @JsonInclude được dùng trong ErrorResponse để định dạng thời gian và loại bỏ field null.
 
-## 📚 Kiến thức đạt được
+Có thể mở rộng để xử lý các lỗi khác như 403, 500, lỗi quyền truy cập, v.v.
 
-- **Annotation** giúp mã ngắn gọn, dễ bảo trì
-- Tận dụng sức mạnh của **Convention over Configuration**
-- Loại bỏ hầu hết cấu hình XML truyền thống
-- Hiểu cách Spring Boot xử lý các loại request khác nhau
-- Phân biệt giữa `@RequestParam`, `@PathVariable`, `@RequestBody`, `@ModelAttribute`
+📌 Mục tiêu học tập
+Nắm được cách thiết kế hệ thống xử lý lỗi REST API rõ ràng, thống nhất.
 
----
+Biết cách tạo exception tùy chỉnh, và dùng @ExceptionHandler + @RestControllerAdvice để quản lý lỗi toàn cục.
 
-## 🔧 Tips
+Củng cố kỹ năng tổ chức project Spring theo hướng modular, dễ mở rộng.
 
-1. **@RequestParam** vs **@PathVariable**:
-  - `@RequestParam`: Query parameters (`?name=value`)
-  - `@PathVariable`: URI path variables (`/users/{id}`)
+✅ Chạy thử
+bash
+Sao chép
+Chỉnh sửa
+./mvnw spring-boot:run
+API sẽ khởi động tại:
 
-2. **@RequestBody** vs **@ModelAttribute**:
-  - `@RequestBody`: JSON/XML data
-  - `@ModelAttribute`: Form data
+bash
+Sao chép
+Chỉnh sửa
+http://localhost:8080/api/users
+📚 Tài liệu tham khảo
+Spring Boot Docs – Exception Handling
 
-3. **Validation**: Có thể kết hợp với `@Valid` để validate input
+Baeldung – Exception Handling in Spring Boot
 
-4. **Optional Parameters**:
-   ```java
-   @RequestParam(required = false, defaultValue = "Guest") String name;
-   ```
+👨‍💻 Tác giả
+Mai Văn Đăng   ```
